@@ -44,10 +44,12 @@ public class Luta {
     }
 
     public void lutar() {
-        System.out.println("campeao1");
+        System.out.println(campeoes.get(0).getNome());
         r.nextInt(campeoes.get(0).getDano());
 
-        System.out.printf("vc deu %d de dano");
+        System.out.printf("%s deu %d de dano",campeoes.get(0).getNome(), campeoes.get(0).getDano());
+
+
     }
 
 }
