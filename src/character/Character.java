@@ -2,7 +2,7 @@ package character;
 
 import character.enums.ClassEnum;
 
-import java.util.Set;
+import java.util.Random;
 
 public class Character {
 
@@ -10,9 +10,8 @@ public class Character {
     private Integer hitPoints;
     private Integer attack;
     private Integer speed;
-    private Double criticalChance;
-    private Double criticalDamage;
-    private Set<String> actions;
+    private Integer criticalChance;
+    private Integer criticalDamage;
 
     public Character(ClassEnum clazz) {
 
@@ -23,8 +22,8 @@ public class Character {
                 this.hitPoints = 200;
                 this.attack = 10;
                 this.speed = 1;
-                this.criticalChance = 10D;
-                this.criticalDamage = 150D;
+                this.criticalChance = 10;
+                this.criticalDamage = 150;
             }
 
             case MAGE -> {
@@ -32,8 +31,8 @@ public class Character {
                 this.hitPoints = 100;
                 this.attack = 20;
                 this.speed = 2;
-                this.criticalChance = 20D;
-                this.criticalDamage = 120D;
+                this.criticalChance = 20;
+                this.criticalDamage = 120;
             }
 
             case ROGUE -> {
@@ -41,8 +40,8 @@ public class Character {
                 this.hitPoints = 125;
                 this.attack = 7;
                 this.speed = 4;
-                this.criticalChance = 50D;
-                this.criticalDamage = 200D;
+                this.criticalChance = 50;
+                this.criticalDamage = 200;
             }
 
             case BARD -> {
@@ -50,8 +49,8 @@ public class Character {
                 this.hitPoints = 150;
                 this.attack = 8;
                 this.speed = 3;
-                this.criticalChance = 30D;
-                this.criticalDamage = 175D;
+                this.criticalChance = 30;
+                this.criticalDamage = 175;
             }
         }
 
@@ -59,10 +58,6 @@ public class Character {
 
     public String getClazz() {
         return clazz;
-    }
-
-    public void setClazz(String clazz) {
-        this.clazz = clazz;
     }
 
     public Integer getHitPoints() {
@@ -77,39 +72,25 @@ public class Character {
         return attack;
     }
 
-    public void setAttack(Integer attack) {
-        this.attack = attack;
-    }
-
     public Integer getSpeed() {
         return speed;
     }
 
-    public void setSpeed(Integer speed) {
-        this.speed = speed;
-    }
-
-    public Double getCriticalChance() {
+    public Integer getCriticalChance() {
         return criticalChance;
     }
 
-    public void setCriticalChance(Double criticalChance) {
-        this.criticalChance = criticalChance;
-    }
-
-    public Double getCriticalDamage() {
+    public Integer getCriticalDamage() {
         return criticalDamage;
     }
 
-    public void setCriticalDamage(Double criticalDamage) {
-        this.criticalDamage = criticalDamage;
-    }
-
-    public Set<String> getActions() {
-        return actions;
-    }
-
-    public void setActions(Set<String> actions) {
-        this.actions = actions;
+    public Integer calculateDamage(final Integer attack, final Integer criticalChance, final Integer criticalDamage) {
+        final var random = new Random();
+        final var roll = random.nextInt(100) + 1;
+        if (roll <= criticalChance) {
+            System.out.println("CRITICAL HIT!!!");
+            return attack * criticalDamage / 100;
+        }
+        return attack;
     }
 }
