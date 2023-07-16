@@ -2,32 +2,33 @@ package character;
 
 import java.util.Random;
 
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
+
 public abstract class Character {
 
     private Integer hitPoints;
     private Integer attack;
     private Integer speed;
     private Integer criticalChance;
-    private Integer criticalDamage;
+    private Double criticalDamage;
+    private Boolean buffed = FALSE;
+    private Boolean alive = TRUE;
 
     public Integer getHitPoints() {
         return hitPoints;
-    }
-
-    public Integer getAttack() {
-        return attack;
     }
 
     public Integer getSpeed() {
         return speed;
     }
 
-    public Integer getCriticalChance() {
-        return criticalChance;
+    public Boolean getBuffed() {
+        return buffed;
     }
 
-    public Integer getCriticalDamage() {
-        return criticalDamage;
+    public Boolean getAlive() {
+        return alive;
     }
 
     public void setHitPoints(Integer hitPoints) {
@@ -46,17 +47,30 @@ public abstract class Character {
         this.criticalChance = criticalChance;
     }
 
-    public void setCriticalDamage(Integer criticalDamage) {
+    public void setCriticalDamage(Double criticalDamage) {
         this.criticalDamage = criticalDamage;
     }
 
-    public Integer attack(final Integer attack, final Integer criticalChance, final Integer criticalDamage) {
-        final var random = new Random();
-        final var roll = random.nextInt(100) + 1;
+    public void setBuffed(Boolean buffed) {
+        this.buffed = buffed;
+    }
+
+    public void setAlive(Boolean alive) {
+        this.alive = alive;
+    }
+
+    public abstract String retrieveActions();
+
+    public Integer attack() {
+        final var roll = new Random().nextInt(100) + 1;
         if (roll <= criticalChance) {
             System.out.println("CRITICAL HIT!!!");
-            return attack * criticalDamage / 100;
+            return (int) (attack * criticalDamage);
         }
         return attack;
     }
+
+    public abstract void buff();
+
+    public abstract void debuff();
 }
