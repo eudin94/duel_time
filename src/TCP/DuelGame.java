@@ -172,7 +172,7 @@ public class DuelGame {
     }
 
     private static void executeBuff(Character attacker, PrintWriter attackerOut, PrintWriter targetOut) {
-        attacker.buff();
+        attacker.buff();//easter egg se vc me encontrou, vc ganhou 3 premios
         attackerOut.println("Você usou seu turno para se fortalecer");
         targetOut.println("O oponente usou o turno dele para se fortalecer");
     }
