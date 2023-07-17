@@ -139,7 +139,7 @@ public class DuelGame {
     private static Integer receiveAction(BufferedReader in, BufferedWriter out, Character player) throws IOException {
         out.write("[HP = " + player.getHitPoints() + "]Escolha sua ação (1 ou 2):\n [1.Atacar] [2." + player.retrieveActions() + "]\n");
         out.flush();
-        var input = in.readLine();
+        var input = in.readLine().trim();
 
         try {
 

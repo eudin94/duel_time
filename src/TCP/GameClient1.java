@@ -3,6 +3,8 @@ package TCP;
 import java.io.*;
 import java.net.Socket;
 
+import static java.util.Objects.nonNull;
+
 public class GameClient1 {
 
     public static void main(String[] args) {
@@ -20,6 +22,9 @@ public class GameClient1 {
             System.out.println(message);
 
             // Ler a escolha do personagem do jogador
+            message = in.readLine();
+            System.out.println(message);
+
             BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
             String chosenCharacter = userInput.readLine();
 
@@ -33,6 +38,14 @@ public class GameClient1 {
 
             // Loop principal do jogo
             while (true) {
+
+                // Receber mensagem de ação do servidor
+                message = in.readLine();
+                System.out.println(message);
+
+                message = in.readLine();
+                System.out.println(message);
+
                 // Receber ação do jogador
                 String action = userInput.readLine();
 
@@ -48,6 +61,10 @@ public class GameClient1 {
                 if (message.contains("Você foi derrotado") || message.contains("Você matou seu oponente")) {
                     break;
                 }
+
+                message = in.readLine();
+                if (nonNull(message)) System.out.println(message);
+
             }
 
             // Fechar conexão
