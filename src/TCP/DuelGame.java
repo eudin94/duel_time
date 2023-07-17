@@ -18,6 +18,7 @@ public class DuelGame {
     public static void main(String[] args) {
         Character player1;
         Character player2;
+        var player1IsFirst = false;
 
         try {
             // Inicialização do servidor
@@ -52,64 +53,59 @@ public class DuelGame {
             // Loop principal do jogo
             while (player1.getAlive() && player2.getAlive()) {
 
-                Character first;
-                BufferedReader firstIn;
-                BufferedWriter firstOut;
-
-                Character last;
-                BufferedReader lastIn;
-                BufferedWriter lastOut;
-
                 // Determina qual jogador será o primeiro
                 if (player1.getSpeed() > player2.getSpeed()) {
-                    first = player1;
-                    firstIn = player1In;
-                    firstOut = player1Out;
-
-                    last = player2;
-                    lastIn = player2In;
-                    lastOut = player2Out;
+                    player1IsFirst = true;
                 } else if (player1.getSpeed() < player2.getSpeed()) {
-                    first = player2;
-                    firstIn = player2In;
-                    firstOut = player2Out;
-
-                    last = player1;
-                    lastIn = player1In;
-                    lastOut = player1Out;
+                    player1IsFirst = false;
                 } else {
-                    var player1First = new Random().nextBoolean();
-                    first = player1First ? player1 : player2;
-                    firstIn = player1First ? player1In : player2In;
-                    firstOut = player1First ? player1Out : player2Out;
-
-                    last = !player1First ? player1 : player2;
-                    lastIn = !player1First ? player1In : player2In;
-                    lastOut = !player1First ? player1Out : player2Out;
+                    player1IsFirst = new Random().nextBoolean();
                 }
 
                 // Os jogadores escolhem sua ações
-                var firstAction = receiveAction(firstIn, firstOut, first);
-                var lastAction = receiveAction(lastIn, lastOut, last);
+                var firstAction = player1IsFirst
+                        ? receiveAction(player1In, player1Out, player1)
+                        : receiveAction(player2In, player2Out, player2);
 
-                // O jogador mais rápido executa a ação escolhida
-                if (firstAction == 1) {
-                    executeAttack(first, last, firstOut, lastOut);
+                var lastAction = player1IsFirst
+                        ? receiveAction(player2In, player2Out, player2)
+                        : receiveAction(player1In, player1Out, player1);
+
+
+                if (player1IsFirst) {
+                    // O jogador mais rápido executa a ação escolhida
+                    if (firstAction == 1) {
+                        executeAttack(player1, player2, player1Out, player2Out);
+                    } else {
+                        executeBuff(player1, player1Out, player2Out);
+                    }
+                    if (!player2.getAlive()) break;
+
+                    // O jogador mais lento executa a ação escolhida
+                    if (lastAction == 1) {
+                        executeAttack(player2, player1, player2Out, player1Out);
+                    } else {
+                        executeBuff(player2, player2Out, player1Out);
+                    }
+                    if (!player1.getAlive()) break;
+
                 } else {
-                    executeBuff(first, firstOut, lastOut);
+                    // O jogador mais rápido executa a ação escolhida
+                    if (firstAction == 1) {
+                        executeAttack(player2, player1, player2Out, player1Out);
+                    } else {
+                        executeBuff(player2, player2Out, player1Out);
+                    }
+                    if (!player1.getAlive()) break;
+
+                    // O jogador mais lento executa a ação escolhida
+                    if (lastAction == 1) {
+                        executeAttack(player1, player2, player1Out, player2Out);
+                    } else {
+                        executeBuff(player1, player1Out, player2Out);
+                    }
+                    if (!player2.getAlive()) break;
                 }
-
-                if (!last.getAlive()) break;
-
-                // O jogador mais lento executa a ação escolhida
-                if (lastAction == 1) {
-                    executeAttack(last, first, lastOut, firstOut);
-                } else {
-                    executeBuff(last, lastOut, firstOut);
-                }
-
-                if (!first.getAlive()) break;
-
             }
 
             // Fechar conexões
@@ -165,7 +161,6 @@ public class DuelGame {
             targetOut.flush();
             attackerOut.write("O gatuno desviou do seu ataque!\n");
             attackerOut.flush();
-            ;
         } else {
             var damage = attacker.attack();
             target.setHitPoints(target.getHitPoints() - damage);
