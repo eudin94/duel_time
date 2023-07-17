@@ -37,10 +37,7 @@ public class GameClient2 {
             messageReaderThread.start();
 
             // Loop principal do jogo
-            while (true) {
-
-                // Verificar condição de saída do loop
-                if (GAME_OVER) break;
+            while (!GAME_OVER) {
 
                 // Receber ação do jogador
                 BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
