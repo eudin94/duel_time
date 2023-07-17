@@ -3,9 +3,12 @@ package TCP;
 import java.io.*;
 import java.net.Socket;
 
-import static java.util.Objects.nonNull;
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
 
 public class GameClient1 {
+
+    private static Boolean GAME_OVER = FALSE;
 
     public static void main(String[] args) {
         String serverAddress = "localhost"; // Endereço IP do servidor
@@ -17,61 +20,47 @@ public class GameClient1 {
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 
-            // Receber mensagem de boas-vindas do servidor
-            String message = in.readLine();
-            System.out.println(message);
+            // Thread para ler as mensagens do servidor
+            Thread messageReaderThread = new Thread(() -> {
+                try {
+                    String message;
+                    while ((message = in.readLine()) != null) {
+                        if (message.contains("matou") || message.contains("derrotado")) GAME_OVER = TRUE;
+                        System.out.println(message);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
 
-            // Ler a escolha do personagem do jogador
-            message = in.readLine();
-            System.out.println(message);
-
-            BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
-            String chosenCharacter = userInput.readLine();
-
-            // Enviar a escolha do personagem para o servidor
-            out.write(chosenCharacter + "\n");
-            out.flush();
-
-            // Receber mensagem de confirmação do servidor
-            message = in.readLine();
-            System.out.println(message);
+            // Iniciar a thread para ler as mensagens do servidor
+            messageReaderThread.start();
 
             // Loop principal do jogo
             while (true) {
 
-                // Receber mensagem de ação do servidor
-                message = in.readLine();
-                System.out.println(message);
-
-                message = in.readLine();
-                System.out.println(message);
+                // Verificar condição de saída do loop
+                if (GAME_OVER) break;
 
                 // Receber ação do jogador
+                BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
                 String action = userInput.readLine();
 
                 // Enviar ação para o servidor
                 out.write(action + "\n");
                 out.flush();
 
-                // Receber resposta do servidor
-                message = in.readLine();
-                System.out.println(message);
-
-                // Verificar condição de saída do loop
-                if (message.contains("Você foi derrotado") || message.contains("Você matou seu oponente")) {
-                    break;
-                }
-
-                message = in.readLine();
-                if (nonNull(message)) System.out.println(message);
-
             }
 
             // Fechar conexão
             socket.close();
 
-        } catch (IOException e) {
+            // Aguardar a conclusão da thread de leitura das mensagens do servidor
+            messageReaderThread.join();
+
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
+        System.exit(0);
     }
 }
