@@ -6,10 +6,7 @@ import character.clazz.Mage;
 import character.clazz.Rogue;
 import character.clazz.Warrior;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Random;
@@ -25,25 +22,31 @@ public class DuelGame {
         try {
             // Inicialização do servidor
             ServerSocket serverSocket = new ServerSocket(1234);
-            System.out.println("Servidor iniciado. Aguardando conexão...");
+            System.out.println("Servidor iniciado. Aguardando conexão...\n");
 
             // Aguardando conexão do jogador 1
             Socket player1Socket = serverSocket.accept();
-            PrintWriter player1Out = new PrintWriter(player1Socket.getOutputStream(), true);
+            OutputStreamWriter outputStreamWriter1 = new OutputStreamWriter(player1Socket.getOutputStream());
+            BufferedWriter player1Out = new BufferedWriter(outputStreamWriter1);
             BufferedReader player1In = new BufferedReader(new InputStreamReader(player1Socket.getInputStream()));
-            player1Out.println("Conectado como Jogador 1. Aguardando oponente...");
+            player1Out.write("Conectado como Jogador 1. Aguardando oponente...\n");
+            player1Out.flush();
 
             // Aguardando conexão do jogador 2
             Socket player2Socket = serverSocket.accept();
-            PrintWriter player2Out = new PrintWriter(player2Socket.getOutputStream(), true);
+            OutputStreamWriter outputStreamWriter2 = new OutputStreamWriter(player2Socket.getOutputStream());
+            BufferedWriter player2Out = new BufferedWriter(outputStreamWriter2);
             BufferedReader player2In = new BufferedReader(new InputStreamReader(player2Socket.getInputStream()));
-            player2Out.println("Conectado como Jogador 2. Iniciando jogo...");
+            player2Out.write("Conectado como Jogador 2. Iniciando jogo...\n");
+            player2Out.flush();
 
             // Iniciando jogo
             player1 = chooseCharacter(player1In, player1Out);
             player2 = chooseCharacter(player2In, player2Out);
-            player1Out.println("Jogo iniciado. Você escolheu: " + player1.getClass().getSimpleName());
-            player2Out.println("Jogo iniciado. Você escolheu: " + player2.getClass().getSimpleName());
+            player1Out.write("Jogo iniciado. Você escolheu: " + player1.getClass().getSimpleName() + "\n");
+            player1Out.flush();
+            player2Out.write("Jogo iniciado. Você escolheu: " + player2.getClass().getSimpleName() + "\n");
+            player2Out.flush();
 
 
             // Loop principal do jogo
@@ -51,11 +54,11 @@ public class DuelGame {
 
                 Character first;
                 BufferedReader firstIn;
-                PrintWriter firstOut;
+                BufferedWriter firstOut;
 
                 Character last;
                 BufferedReader lastIn;
-                PrintWriter lastOut;
+                BufferedWriter lastOut;
 
                 // Determina qual jogador será o primeiro
                 if (player1.getSpeed() > player2.getSpeed()) {
@@ -119,8 +122,9 @@ public class DuelGame {
         }
     }
 
-    private static Character chooseCharacter(BufferedReader in, PrintWriter out) throws IOException {
-        out.println("Escolha seu personagem: Guerreiro, Mago, Gatuno ou Bardo");
+    private static Character chooseCharacter(BufferedReader in, BufferedWriter out) throws IOException {
+        out.write("Escolha seu personagem: Guerreiro, Mago, Gatuno ou Bardo\n");
+        out.flush();
         String chosenClass = in.readLine().trim().toUpperCase();
 
         return switch (chosenClass) {
@@ -129,14 +133,16 @@ public class DuelGame {
             case "GATUNO" -> new Rogue();
             case "BARDO" -> new Bard();
             default -> {
-                out.println("Valor inválido!");
+                out.write("Valor inválido!\n");
+                out.flush();
                 yield chooseCharacter(in, out);
             }
         };
     }
 
-    private static Integer receiveAction(BufferedReader in, PrintWriter out, Character player) throws IOException {
-        out.println("[HP = " + player.getHitPoints() + "]Escolha sua ação (1 ou 2):\n [1.Atacar] [2." + player.retrieveActions() + "]");
+    private static Integer receiveAction(BufferedReader in, BufferedWriter out, Character player) throws IOException {
+        out.write("[HP = " + player.getHitPoints() + "]Escolha sua ação (1 ou 2):\n [1.Atacar] [2." + player.retrieveActions() + "]\n");
+        out.flush();
         var input = in.readLine();
 
         try {
@@ -144,97 +150,45 @@ public class DuelGame {
             var opt = Integer.parseInt(input);
             if (opt == 1 || opt == 2) return opt;
 
-        } catch (NumberFormatException e) {
-            out.println("Opção inválida!");
-            return receiveAction(in, out, player);
+        } catch (NumberFormatException ignore) {
         }
 
-        out.println("Opção inválida!");
+        out.write("Opção inválida!\n");
+        out.flush();
         return receiveAction(in, out, player);
     }
 
-    private static void executeAttack(Character attacker, Character target, PrintWriter attackerOut, PrintWriter targetOut) {
+    private static void executeAttack(Character attacker, Character target,
+                                      BufferedWriter attackerOut, BufferedWriter targetOut) throws IOException {
         if (target instanceof Rogue && target.getBuffed() && new Random().nextBoolean()) {
-            targetOut.println("Você desviou!");
-            attackerOut.println("O gatuno desviou do seu ataque!");
+            targetOut.write("Você desviou!\n");
+            targetOut.flush();
+            attackerOut.write("O gatuno desviou do seu ataque!\n");
+            attackerOut.flush();
+            ;
         } else {
             var damage = attacker.attack();
             target.setHitPoints(target.getHitPoints() - damage);
-            targetOut.println("Você sofreu " + damage + " de dano.");
-            attackerOut.println("Você atacou o oponente, causando " + damage + " de dano.");
+            targetOut.write("Você sofreu " + damage + " de dano.\n");
+            targetOut.flush();
+            attackerOut.write("Você atacou o oponente, causando " + damage + " de dano.\n");
+            attackerOut.flush();
             if (target.getHitPoints() <= 0) {
                 target.setAlive(FALSE);
-                attackerOut.println("Você matou seu oponente");
-                targetOut.println("Você foi derrotado");
+                attackerOut.write("Você matou seu oponente\n");
+                attackerOut.flush();
+                targetOut.write("Você foi derrotado\n");
+                targetOut.flush();
             }
         }
         attacker.debuff();
     }
 
-    private static void executeBuff(Character attacker, PrintWriter attackerOut, PrintWriter targetOut) {
-        attacker.buff();//easter egg se vc me encontrou, vc ganhou 3 premios
-        attackerOut.println("Você usou seu turno para se fortalecer");
-        targetOut.println("O oponente usou o turno dele para se fortalecer");
+    private static void executeBuff(Character attacker, BufferedWriter attackerOut, BufferedWriter targetOut) throws IOException {
+        attacker.buff();
+        attackerOut.write("Você usou seu turno para se fortalecer\n");
+        attackerOut.flush();
+        targetOut.write("O oponente usou o turno dele para se fortalecer\n");
+        targetOut.flush();
     }
 }
-//    ────────        ▓▓▓▓▓▓▓────────────▒▒▒▒▒▒
-//            ──────▓▓▒▒▒▒▒▒▒▓▓────────▒▒░░░░░░▒▒
-//            ────▓▓▒▒▒▒▒▒▒▒▒▒▒▓▓────▒▒░░░░░░░░░▒▒▒
-//            ───▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▓▓▒▒░░░░░░░░░░░░░░▒
-//            ──▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░░░░▒
-//            ──▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░░░░░▒
-//            ─▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░░░░░░▒
-//            ▓▓▒▒▒▒▒▒░░░░░░░░░░░▒▒░░▒▒▒▒▒▒▒▒▒▒▒░░░░░░▒
-//            ▓▓▒▒▒▒▒▒▀▀▀▀▀███▄▄▒▒▒░░░▄▄▄██▀▀▀▀▀░░░░░░▒
-//            ▓▓▒▒▒▒▒▒▒▄▀████▀███▄▒░▄████▀████▄░░░░░░░▒
-//            ▓▓▒▒▒▒▒▒█──▀█████▀─▌▒░▐──▀█████▀─█░░░░░░▒
-//            ▓▓▒▒▒▒▒▒▒▀▄▄▄▄▄▄▄▄▀▒▒░░▀▄▄▄▄▄▄▄▄▀░░░░░░░▒
-//            ─▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░░░░░▒
-//            ──▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░░░░▒
-//            ───▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▀▀▀░░░░░░░░░░░░░░▒
-//            ────▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░▒▒
-//            ─────▓▓▒▒▒▒▒▒▒▒▒▒▄▄▄▄▄▄▄▄▄░░░░░░░░▒▒
-//            ──────▓▓▒▒▒▒▒▒▒▄▀▀▀▀▀▀▀▀▀▀▀▄░░░░░▒▒
-//            ───────▓▓▒▒▒▒▒▀▒▒▒▒▒▒░░░░░░░▀░░░▒▒
-//            ────────▓▓▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░▒▒
-//            ──────────▓▓▒▒▒▒▒▒▒▒▒░░░░░░░░▒▒
-//            ───────────▓▓▒▒▒▒▒▒▒▒░░░░░░░▒▒
-//            ─────────────▓▓▒▒▒▒▒▒░░░░░▒▒
-//            ───────────────▓▓▒▒▒▒░░░░▒▒
-//            ────────────────▓▓▒▒▒░░░▒▒
-//            ──────────────────▓▓▒░▒▒
-//            ───────────────────▓▒░▒
-//            ────────────────────▓▒
-//    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀         ⣠⣤⣤⣤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣶⣿⠟⠉⠉⠻⣿⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣤⣾⠿⠉⠀⠀⠀⠀⠀⠹⣿⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣴⣾
-//            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣴⣾⡿⠛⠉
-//            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣸⣿⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣾⡿⠟⠁⠀⠀⠀
-//            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣴⣿⡿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣾⣿⣷⣶⣶⣦⣤⣤⣄⣤⡀⣀⣩⣾⣿⠿⠋⠀⠀⠀⠀⠀⣠
-//            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⡿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣿⣿⣿⣿⠟⠋⠉⠉⠙⣿⣿⣿⣿⣿⣿⠟⠁⠀⠀⠀⠀⠀⢀⡾⠁
-//            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣿⠁⠛⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣴⣿⣿⣿⡟⠁⠀⠀⠀⢀⣴⣿⣿⣿⣿⡏⠋⠀⠀⠀⠀⠀⠀⠀⡞⠋⠀
-//            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣼⣿⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⣿⣿⣿⡏⠀⠀⠀⠀⣶⣿⣿⣿⣿⡿⠉⠀⠀⠀⠀⠀⠀⠀⠀⢸⡯⠤⣤
-//            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠠⣿⣿⣿⡏⠀⠀⠀⠀⣼⣿⣿⣿⣿⡟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡾⠁
-//            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣄⣄⣼⣿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢻⡿⠋⠀⠀⠀⠀⣼⣿⣿⣿⡿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢷⣄
-//            ⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⠀⠀⠀⠀⣾⣿⣿⣿⡿⠁⠀⠀⠀⠀⠀⠀⣠⣶⣶⣶⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠿⠟⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻
-//            ⠀⠀⠀⠀⠀⠀⢀⣾⠿⠛⢿⣿⣷⣄⡀⣿⠋⠀⠈⠀⠀⠀⠀⠀⠀⢀⣾⡏⠀⢹⣿⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//            ⠀⠀⠀⣠⣤⣦⣼⣿⠀⠀⠀⣿⣿⣿⣿⣿⣦⣀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⡿⠀⠀⠀⢀⣀⣀⣀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣤⣾⣿⣿⣿⢷⣄⠀⠀⠀⠀⠀⠀⠀
-//            ⠀⣠⣾⡿⠋⠉⠉⠁⠀⠀⠀⠀⠉⢯⡙⠻⣿⣿⣷⣤⡀⠀⠀⠀⠀⢿⣿⣿⣿⣿⡿⠃⢀⡤⠖⠋⣉⣉⣉⣉⠉⠉⠒⠦⣄⠀⠀⠀⢔⡟⡿⠟⠉⣟⣻⣮⣿⠀⠀⠀⠀⠀⠀⠀⠀
-//            ⣾⣿⠋⠀⠀⠀⠀⣀⣀⡀⠀⠀⠀⠀⠙⢦⣄⠉⠻⢿⣿⣷⣦⡀⠀⠈⠙⠛⠛⠋⠀⢰⠟⡇⠀⠀⠈⠻⡿⠛⠁⠀⠀⠀⠈⠳⣄⠀⠸⣧⣿⣿⣿⣿⣿⣿⣿⡏⠀⠀⠀⠀⠀⠀⠀
-//            ⣿⡇⠀⠀⠀⣴⠙⣩⣿⣿⣄⠀⠀⠀⠀⡶⢌⡙⠶⣤⡈⠛⠿⣿⣷⣦⣀⠀⠀⠀⠀⡇⠀⢻⣄⠀⠀⣠⢷⠀⠀⠀⠀⠀⡶⠀⠘⡆⠀⠀⠻⣿⣿⣿⣿⣿⣿⡿⠀⠀⠀⠀⠀⠀⠀
-//            ⣿⡇⠀⠀⢸⣇⢸⣿⣿⣿⣿⠀⠀⠀⠀⡇⠀⠈⠛⠦⣝⡳⢤⣈⠛⠻⣿⣷⣦⣀⠀⠀⠀⠀⠈⠙⠋⠁⠀⠛⠦⢤⡤⠞⠃⠀⠀⢳⠀⠀⠀⠈⠋⠙⠛⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//            ⣿⡇⠀⠀⠈⢿⣄⣿⣿⣿⠏⠀⠀⠀⠀⡇⠀⠀⠀⠀⠀⠙⠳⢬⣛⠦⠀⠙⢻⣿⣷⣦⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡞⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//            ⣿⡇⠀⠀⠀⠀⠉⠛⠋⠁⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠈⠁⠀⠀⠈⣿⠉⢻⣿⣷⣦⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡼⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//            ⣿⡇⠀⠀⠀⠀⠀⣠⣄⠀⠀⢰⠶⠒⠒⢧⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀⢸⡇⢸⡟⢿⣷⣦⣴⣶⣶⣶⣶⣤⣔⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//            ⣿⡇⠀⠀⣤⠀⠀⠿⠿⠁⢀⡿⠀⠀⠀⡄⠈⠙⡷⢦⣄⡀⠀⠀⠀⠀⠀⠀⠀⣿⠀⢸⡇⢸⡇⠀⣿⠙⣿⣿⣉⠉⠙⠿⣿⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//            ⣿⡇⠀⠀⠙⠷⢤⣀⣠⠴⠛⠁⠀⠀⠀⠇⠀⠀⡇⢸⡏⢹⡷⢦⣄⡀⠀⠀⠀⣿⡀⢸⡇⢸⡇⠀⡟⠀⢸⠀⢹⡷⢦⣄⣘⣿⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//            ⣿⣿⠢⣤⡀⠀⠀⠀⠀⠀⠀⣠⠾⣿⣿⡷⣤⣀⡇⠸⡇⢸⡇⢸⠉⠙⠳⢦⣄⡻⢿⣾⣧⣸⣧⠀⡇⠀⢹⡀⢸⡇⢤⣈⠙⠻⣿⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//            ⢹⣿⣷⣌⡉⠛⠲⢶⣶⠖⠛⠛⢶⣄⡉⠛⠿⣽⣿⣶⣧⣸⡇⢸⠀⠀⠀⠀⠈⠙⠲⢮⣝⠻⣿⣷⣷⣄⣼⠀⢸⡇⠀⠈⠁⠀⢸⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//            ⠀⠈⠙⠻⢿⣷⣶⣤⣉⡻⢶⣄⣀⠈⠙⠳⢦⣈⡉⠻⢿⣿⣷⣾⣦⡀⠀⠀⠀⠀⠀⠀⠈⠙⠲⢭⣛⠿⣿⣷⣼⡇⠀⠀⠀⠀⠈⣿⡇⠀⠀⠀⠀⠀⠀⣀⠀⠀⠀⠀⠀⠀⠀⠀⣠
-//            ⠀⠀⠀⠀⠀⠈⠙⠻⢿⣿⣷⣶⣽⣻⡦⠀⠀⠈⠙⠷⣦⣌⡙⠻⢿⣟⣷⣤⣀⠀⠀⠀⠀⠀⠀⠀⠈⠙⠳⢯⣻⡇⠀⠀⠀⠀⠀⢸⣿⠀⣀⠀⠀⠀⠀⠈⠳⣄⡀⠀⠀⢀⣏⡟⠛
-//            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠛⠻⢿⣿⣿⣿⣶⣤⣤⣤⣀⣈⠛⠷⣤⣈⡛⠷⢽⡻⢶⣄⣀⠀⠀⠀⠀⠀⠀⠀⠈⠛⠳⢤⣀⠀⠀⢸⣿⡀⠈⠻⢭⣲⣴⣴⠗⠋⠛⠶⠿⠿⠃⠀⠀
-//            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢈⣿⡿⠛⠉⠙⠛⠛⠻⢷⣦⣄⣩⣿⠶⠖⠛⠛⠛⠛⠛⠛⠿⢷⣶⣦⣄⠀⠀⠀⠀⠉⢻⣶⣿⣿⠇⠀⠀⠀⠉⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⣿⠁⠀⠀⠀⠀⠀⠀⠀⣿⣿⠋⠀⠀⠀⠀⢀⣠⡶⠂⠀⠀⠀⠈⠙⠿⣿⣦⡄⠀⠀⣸⣿⠟⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣿⡟⠀⠀⠀⠀⠀⠀⠀⠀⢸⡇⠀⠀⠀⠀⣴⠏⠁⠀⠀⠀⠀⠀⠀⠀⠀⠈⠛⢿⣶⣄⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⠇⠀⠀⠀⠀⠀⠀⠀⠀⢸⣧⠀⠀⢀⡾⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡠⠙⢿⣿⣇⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡿⠿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⡿⠦⠠⠋⠀⠀⠀⠀⠀⢀⡶⠂⠀⠀⠀⠀⠀⠀⠧⠤⠄⠙⡿⠿⠦⠤⠤⠤⠤⠄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
