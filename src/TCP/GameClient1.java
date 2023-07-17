@@ -39,7 +39,6 @@ public class GameClient1 {
                 Thread.sleep(5000);
 
                 // Gerar uma ação automática&Gerar uma ação automática com base na última opção escolhida
-                //var randomAction = new Random().nextInt(2) + 1;
                 var randomAction = new Random();
                 int automaticAction = (lastAction == 2) ? 1 : (randomAction.nextInt(2) + 1);
                 String action = String.valueOf(automaticAction);
