@@ -28,8 +28,7 @@ public class GameClient1 {
                         if (message.contains("matou") || message.contains("derrotado")) GAME_OVER = TRUE;
                         System.out.println(message);
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } catch (IOException ignore) {
                 }
             });
 
@@ -37,17 +36,18 @@ public class GameClient1 {
             messageReaderThread.start();
 
             // Loop principal do jogo
-            while (!GAME_OVER) {
+            do {
+                // Verificar se há entrada disponível
+                if (System.in.available() > 0) {
+                    // Receber ação do jogador
+                    BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+                    String action = userInput.readLine();
 
-                // Receber ação do jogador
-                BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
-                String action = userInput.readLine();
-
-                // Enviar ação para o servidor
-                out.write(action + "\n");
-                out.flush();
-
-            }
+                    // Enviar ação para o servidor
+                    out.write(action + "\n");
+                    out.flush();
+                }
+            } while (!GAME_OVER);
 
             // Fechar conexão
             socket.close();
@@ -55,9 +55,38 @@ public class GameClient1 {
             // Aguardar a conclusão da thread de leitura das mensagens do servidor
             messageReaderThread.join();
 
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+        } catch (IOException | InterruptedException ignore) {
         }
+
         System.exit(0);
     }
 }
+
+//    ────────        ▓▓▓▓▓▓▓────────────▒▒▒▒▒▒
+//            ──────▓▓▒▒▒▒▒▒▒▓▓────────▒▒░░░░░░▒▒
+//            ────▓▓▒▒▒▒▒▒▒▒▒▒▒▓▓────▒▒░░░░░░░░░▒▒▒
+//            ───▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▓▓▒▒░░░░░░░░░░░░░░▒
+//            ──▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░░░░▒
+//            ──▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░░░░░▒
+//            ─▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░░░░░░▒
+//            ▓▓▒▒▒▒▒▒░░░░░░░░░░░▒▒░░▒▒▒▒▒▒▒▒▒▒▒░░░░░░▒
+//            ▓▓▒▒▒▒▒▒▀▀▀▀▀███▄▄▒▒▒░░░▄▄▄██▀▀▀▀▀░░░░░░▒
+//            ▓▓▒▒▒▒▒▒▒▄▀████▀███▄▒░▄████▀████▄░░░░░░░▒
+//            ▓▓▒▒▒▒▒▒█──▀█████▀─▌▒░▐──▀█████▀─█░░░░░░▒
+//            ▓▓▒▒▒▒▒▒▒▀▄▄▄▄▄▄▄▄▀▒▒░░▀▄▄▄▄▄▄▄▄▀░░░░░░░▒
+//            ─▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░░░░░▒
+//            ──▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░░░░▒
+//            ───▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▀▀▀░░░░░░░░░░░░░░▒
+//            ────▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░▒▒
+//            ─────▓▓▒▒▒▒▒▒▒▒▒▒▄▄▄▄▄▄▄▄▄░░░░░░░░▒▒
+//            ──────▓▓▒▒▒▒▒▒▒▄▀▀▀▀▀▀▀▀▀▀▀▄░░░░░▒▒
+//            ───────▓▓▒▒▒▒▒▀▒▒▒▒▒▒░░░░░░░▀░░░▒▒
+//            ────────▓▓▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░▒▒
+//            ──────────▓▓▒▒▒▒▒▒▒▒▒░░░░░░░░▒▒
+//            ───────────▓▓▒▒▒▒▒▒▒▒░░░░░░░▒▒
+//            ─────────────▓▓▒▒▒▒▒▒░░░░░▒▒
+//            ───────────────▓▓▒▒▒▒░░░░▒▒
+//            ────────────────▓▓▒▒▒░░░▒▒
+//            ──────────────────▓▓▒░▒▒
+//            ───────────────────▓▒░▒
+//            ────────────────────▓▒
